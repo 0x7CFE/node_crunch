@@ -64,7 +64,7 @@ pub trait NCServer {
 
     /// This method is called once for every new node that registers with the server using the NCNodeMessage::Register message.
     /// It may prepare some initial data that is common for all nodes at the beginning of the job.
-    fn initial_data(&mut self) -> Result<Option<Self::InitialDataT>, NCError> {
+    fn initial_data(&mut self, node_id: NodeID) -> Result<Option<Self::InitialDataT>, NCError> {
         Ok(None)
     }
     /// This method is called when the node requests new data with the NCNodeMessage::NeedsData message.
@@ -323,7 +323,7 @@ impl<T: NCServer> NCServerProcess<T, T::CustomMessageT> {
         match request {
             NCNodeMessage::Register => {
                 let node_id = self.node_list.lock()?.register_new_node();
-                let initial_data = self.nc_server.lock()?.initial_data()?;
+                let initial_data = self.nc_server.lock()?.initial_data(node_id)?;
                 info!("Registering new node: {}, {}", node_id, stream.peer_addr()?);
                 self.send_initial_data_message(node_id, initial_data, stream)?;
             }
